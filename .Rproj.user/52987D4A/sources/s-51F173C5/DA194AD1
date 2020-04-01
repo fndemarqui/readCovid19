@@ -7,13 +7,13 @@
     "folds" : "",
     "hash" : "0",
     "id" : "DA194AD1",
-    "lastKnownWriteTime" : 1585763847,
-    "last_content_update" : 1585763847917,
+    "lastKnownWriteTime" : 1585764278,
+    "last_content_update" : 1585764278675,
     "path" : "~/Dropbox/readCovid19/R/loadData.R",
     "project_path" : "R/loadData.R",
     "properties" : {
-        "cursorPosition" : "102,18",
-        "scrollLine" : "91"
+        "cursorPosition" : "110,0",
+        "scrollLine" : "100"
     },
     "read_only" : false,
     "read_only_alternatives" : [

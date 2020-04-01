@@ -20,8 +20,7 @@ downloadBR <- function(language=c("pt", "en")){
   url <- "https://covid.saude.gov.br/assets/files/COVID19_"
   url <- paste0(url, name, ".csv")
   brasil <- as_tibble(fread(url))
-  brasil <- mutate(brasil,
-                   data = dmy(data))
+  brasil <- mutate(brasil, data = dmy(data))
   if(language=="en"){
     brasil <- rename(brasil,
                      region  =  regiao,
@@ -49,6 +48,7 @@ downloadBR <- function(language=c("pt", "en")){
 #' world
 #'
 #' # selecting data from Italy:
+#' italy <- filter(world, local=="Italy")
 #' }
 #'
 
@@ -110,6 +110,7 @@ downloadWorld <- function(language=c("pt", "en")){
 }
 
 
-
+brasil <- downloadBR()
+world <- downloadWorld()
 usethis::use_data(brasil, overwrite = TRUE)
 usethis::use_data(world, overwrite = TRUE)

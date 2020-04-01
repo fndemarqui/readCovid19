@@ -23,6 +23,7 @@ world <- downloadWorld()
 world
 
 # selecting data from Italy:
+italy <- filter(world, local=="Italy")
 }
 
 }
