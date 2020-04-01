@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1585762201612.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "DA194AD1",
+    "lastKnownWriteTime" : 1585763847,
+    "last_content_update" : 1585763847917,
+    "path" : "~/Dropbox/readCovid19/R/loadData.R",
+    "project_path" : "R/loadData.R",
+    "properties" : {
+        "cursorPosition" : "102,18",
+        "scrollLine" : "91"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

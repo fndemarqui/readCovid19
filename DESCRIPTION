@@ -1,0 +1,15 @@
+Package: readCovid19
+Type: Package
+Title: Read COVID-19 data 
+Version: 0.1.0
+Authors@R: person(given = "Fabio", family = "Demarqui", email = "fndemarqui@est.ufmg.br", role = c("aut", "cre"))
+Description: R package to import CODID-19 pandemia data into R. The world level data is downloaded from the Johns Hopkins University's repository. Brazilian data is currently available on states level, and are downloaded from the official Brazilian's repository at https://covid.saude.gov.br/.
+URL: https://github.com/fndemarqui/readCovid19
+BugReports: https://github.com/fndemarqui/readCovid19/issues
+Encoding: UTF-8
+Depends: 
+  tidyverse,
+  lubridate,
+  data.table
+LazyData: true
+RoxygenNote: 7.1.0

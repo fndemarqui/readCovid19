@@ -1,0 +1,101 @@
+
+
+# A generic function is a standard R function with a special body, usually containing only a call to UseMethod:
+
+#' Fits the bellreg model
+#' @export
+#' @param x Numeric vector of input values.
+#' @param ... Arguments passed to `rstan::sampling` (e.g. iter, chains).
+#'
+bellreg <- function(x, ...) UseMethod("bellreg")
+
+
+
+#---------------------------------------------
+bellregFit <- function(y, X, hessian, ...){
+
+  n <- nrow(X)
+  p <- ncol(X)
+
+  stan_data <- list(y=y, X=X, n=n, p=p, sigma_beta=sigma_beta)
+  fit <- rstan::optimizing(stanmodels$bellreg, hessian=hessian,
+                           data=stan_data, verbose=FALSE, ...)
+
+  return(fit)
+}
+
+#---------------------------------------------
+
+#' @rdname bellreg
+#' @export
+#'
+bellreg.default <- function(y, X, hessian, ...)
+{
+  fit <- bellregFit(y=y, X=X, hessian, ...)
+  fit$call <- match.call()
+  class(fit) <- "bellreg"
+  return(fit)
+}
+
+
+#---------------------------------------------
+
+#' @rdname bellreg
+#' @export
+#'
+bellreg<- function(formula, data, hessian=TRUE, sigma_beta=10,
+                   approach=c("mle", "bayes"), epsilon=1e-15, ...){
+  approach <- match.arg(approach)
+  mf <- stats::model.frame(formula=formula, data=data)
+  Terms <- stats::terms(mf)
+  X <- as.matrix(stats::model.matrix(attr(mf, "terms"), data=mf))
+  labels <- colnames(X)
+  y <- stats::model.response(mf)
+  n <- nrow(X)
+  p <- ncol(X)
+
+  if(match("(Intercept)", labels)==1){
+    X_std <- scale(X[,-1])
+    x_mean <- array(c(0, attr(X_std, "scaled:center")))
+    x_sd <- array(c(1, attr(X_std, "scaled:scale")))
+    X_std <- cbind(1, X_std)
+  }else{
+    X_std <- scale(X)
+    x_mean <- array(attr(X_std, "scaled:center"))
+    x_sd <- array(attr(X_std, "scaled:scale"))
+  }
+
+
+
+  if(approach=="mle"){
+    stan_data <- list(y=y, X=X_std, n=n, p=p, x_mean=x_mean, x_sd=x_sd, sigma_beta=sigma_beta,
+                      approach=0, epsilon=epsilon)
+    fit <- rstan::optimizing(stanmodels$bellreg, hessian=hessian,
+                             data=stan_data, verbose=FALSE, ...)
+    if(hessian==TRUE){
+      fit$hessian <- - fit$hessian
+    }
+    fit$par <- fit$theta_tilde[-(1:p)]
+    fit <- list(fit=fit)
+  }else{
+    stan_data <- list(y=y, X=X_std, n=n, p=p, x_mean=x_mean, x_sd=x_sd, sigma_beta=sigma_beta,
+                      approach=1, epsilon=epsilon)
+    fit <- rstan::sampling(stanmodels$bellreg, data=stan_data, verbose=FALSE, ...)
+    fit <- list(fit=fit)
+  }
+
+
+  fit$n <- n
+  fit$p <- p
+  fit$x_mean <- x_mean
+  fit$x_sd <- x_sd
+
+  fit$call <- match.call()
+  fit$formula <- stats::formula(Terms)
+  fit$terms <- stats::terms.formula(formula)
+  fit$labels <- labels
+  class(fit) <- "bellreg"
+  return(fit)
+}
+
+
