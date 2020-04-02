@@ -1,8 +1,0 @@
-
-
-head(world)
-italy <- filter(world, local=="Italy")
-head(italy)
-
-
-devtools::install_github("fndemarqui/readCovid19")

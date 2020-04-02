@@ -5,7 +5,7 @@
 \alias{downloadBR}
 \title{Function to download data (at world level) from the Johns Hopkins University's repository}
 \usage{
-downloadWorld(language = c("pt", "en"))
+downloadWorld(language = c("en", "pt"))
 }
 \arguments{
 \item{language}{language; currently only portuguese and english available.}
