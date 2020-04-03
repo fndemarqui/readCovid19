@@ -2,7 +2,6 @@
 % Please edit documentation in R/loadData.R
 \name{downloadWorld}
 \alias{downloadWorld}
-\alias{downloadBR}
 \title{Function to download data (at world level) from the Johns Hopkins University's repository}
 \usage{
 downloadWorld(language = c("en", "pt"))

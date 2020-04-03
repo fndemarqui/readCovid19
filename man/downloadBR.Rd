@@ -4,13 +4,15 @@
 \alias{downloadBR}
 \title{Function to download data (at Brazilian level) from the official Brazilian's repository}
 \usage{
-downloadBR(language = c("pt", "en"))
+downloadBR(language = c("pt", "en"), lagdays = 3)
 }
 \arguments{
-\item{language}{language; currently only portuguese and english available.}
+\item{language}{language; currently only portuguese and english available}
+
+\item{lagdays}{number of retrospective days to search for}
 }
 \value{
-tibble/data.frame with the downloaded data.
+tibble/data.frame with the downloaded data
 }
 \description{
 Function to download data (at Brazilian level) from the official Brazilian's repository

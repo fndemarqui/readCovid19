@@ -1,9 +1,30 @@
+#' Function to seach for the most recent available data date
+#' @aliases avdate
+#' @export
+#' @param url desired url for searching the data set
+#' @param lagdays number of retrospective days to search for
+#' @return the most recent available data date.
+#' @description The function searchs and identifies, among all available data sets hosted at a given repository, the up-to-date data set.
+#' @note This function has been adapted from the code provided by Pedro Seiti Fujita.
+#'
+
+available_date <- function(url, lagdays){
+  Files <- function(date){paste0(url, date, '.csv')}
+  dates <- format(seq(as.Date(Sys.time())-lagdays, as.Date(Sys.time()), by='days'), "%Y%m%d")
+  status <- c()
+  for (i in 1:length(dates)) {
+    status[i] <- GET(Files(dates[i]))[2]$status_cod
+  }
+  return(dates[which.max(dates[status==200])])
+}
+
 
 #' Function to download data (at Brazilian level) from the official Brazilian's repository
 #' @aliases downloadBR
 #' @export
-#' @param language language; currently only portuguese and english available.
-#' @return tibble/data.frame with the downloaded data.
+#' @param language language; currently only portuguese and english available
+#' @param lagdays number of retrospective days to search for
+#' @return tibble/data.frame with the downloaded data
 #'
 #' @examples
 #' \dontrun{
@@ -13,12 +34,12 @@
 #' }
 #'
 
-downloadBR <- function(language=c("pt", "en")){
+downloadBR <- function(language=c("pt", "en"), lagdays=3){
   language <- match.arg(language)
   message("Downloading COVID-19 data from official Brazilian repository: https://covid.saude.gov.br/")
-  name <- format(today()-1, "%Y%m%d")
   url <- "https://covid.saude.gov.br/assets/files/COVID19_"
-  url <- paste0(url, name, ".csv")
+  ad <- available_date(url=url, lag=3)
+  url <- paste0(url, ad, ".csv")
   brasil <- as_tibble(fread(url))
   brasil <- mutate(brasil, data = dmy(data))
   brasil <- rename(brasil, obitosAcumulados = obitosAcumulados)
@@ -38,7 +59,7 @@ downloadBR <- function(language=c("pt", "en")){
 
 
 #' Function to download data (at world level) from the Johns Hopkins University's repository
-#' @aliases downloadBR
+#' @aliases downloadWorld
 #' @export
 #' @param language language; currently only portuguese and english available.
 #' @return tibble/data.frame with the downloaded data.
@@ -100,15 +121,30 @@ downloadWorld <- function(language=c("en", "pt")){
   world <- full_join(confirmed, deaths, by=c("local", "date"))
   world <-full_join(world, recovered, by=c("local", "date"))
 
+  world <- world %>%
+    rename(accumCases = confirmed,
+           accumDeaths = deaths,
+           accumRecovered = recovered) %>%
+    group_by(local) %>%
+    mutate(newCases = diff(c(0, accumCases)),
+           newDeaths = diff(c(0, accumDeaths)),
+           newRecovered = diff(c(0, accumRecovered)))
+
+
+
   if(language=="pt"){
     world <- rename(world,
            data = date,
-           casos = confirmed,
-           mortes = deaths,
-           recuperados  = recovered)
+           novosCasos = newCases,
+           novosObitos = newDeaths,
+           novosRecuperados  = newRecovered,
+           casosAcumulados = accumCases,
+           mortesAcumuladas = accumDeaths,
+           recuperadosAcumulados = accumRecovered)
 
   }
   setattr(world, "language", language)
+  class(world) <-  class(world)[-1]
   return(world)
 }
 
@@ -119,190 +155,3 @@ usethis::use_data(brasil, overwrite = TRUE)
 usethis::use_data(world, overwrite = TRUE)
 
 
-#' Aggregate Brazilain data by date, state and region
-#' @aliases aggregateBR
-#' @export
-#' @param language language; currently only portuguese and english available.
-#' @param by areal level of aggregation (all brazilian territory, regions, states)
-#' @param date logical (default is FALSE); if TRUE, then variables at each date are summed up.
-#' @return tibble/data.frame with the aggregated data data.
-#'
-#' @examples
-#' \dontrun{
-#' library(readCovid19)
-#'
-#' # portuguese:
-#' portuguese <-  downloadBR("pt")
-#' aggregateBR(data=portuguese, date=FALSE)
-#' aggregateBR(data=portuguese, by="regiao", date=FALSE)
-#' aggregateBR(data=portuguese, by="estado", date=FALSE)
-#' dim(aggregateBR(data=portuguese, by="estado", date=TRUE))
-#' dim(aggregateBR(data=portuguese, by="regiao", date=TRUE))
-#'
-#' english:
-#' english <- downloadBR("en")
-#' aggregateBR(data=english, by="brazil", date=FALSE)
-#' aggregateBR(data=english, by="region", date=FALSE)
-#' aggregateBR(data=english, by="state", date=FALSE)
-#' aggregateBR(data=english, by="state", date=TRUE)
-#' aggregateBR(data=english, by="region", date=TRUE)
-#'
-#' }
-#'
-
-aggregateBR <- function(data,
-                     by =  c("estado", "regiao", "brasil", "state", "region", "brazil"),
-                     date = FALSE){
-  language <- attributes(data)$language
-  by <- match.arg(by)
-  if(language == "pt"){
-    mydata <- aggregateBRpt(data, by, date)
-  }else{
-    mydata <- aggregateBRen(data, by, date)
-  }
-  return(mydata)
-}
-
-
-
-
-aggregateBRpt <- function(data, by, date){
-  language <- attributes(data)$language
-  mydata <- data
-
-  if(date==TRUE){
-    if(by == "brasil" | by == "brazil"){
-      mydata <- mydata %>%
-        summarise(casosNovos = sum(casosNovos),
-                  casosAcumulados = sum(casosAcumulados),
-                  obitosNovos = sum(obitosNovos),
-                  obitosAcumulados = sum(obitosAcumulados))
-    }else if(by == "estado" | by == "state"){
-      mydata <- mydata %>%
-        group_by(estado) %>%
-        summarise(casosNovos = sum(casosNovos),
-                  casosAcumulados = sum(casosAcumulados),
-                  obitosNovos = sum(obitosNovos),
-                  obitosAcumulados = sum(obitosAcumulados))
-    }else{
-      mydata <- mydata %>%
-        group_by(regiao) %>%
-        summarise(casosNovos = sum(casosNovos),
-                  casosAcumulados = sum(casosAcumulados),
-                  obitosNovos = sum(obitosNovos),
-                  obitosAcumulados = sum(obitosAcumulados))
-      }
-  }else if(by == "regiao" | by == "region"){
-    mydata <- mydata %>%
-      group_by(data, regiao) %>%
-      summarise(casosNovos = sum(casosNovos),
-              casosAcumulados = sum(casosAcumulados),
-              obitosNovos = sum(obitosNovos),
-              obitosAcumulados = sum(obitosAcumulados))
-  }else{
-    message("It only make sense to aggregate data by states when date=TRUE!!!", "\n")
-    mydata <- data
-    return(data)
-  }
-  return(mydata)
-}
-
-
-aggregateBRen <- function(data, by, date){
-  language <- attributes(data)$language
-  mydata <- data
-
-  if(date==TRUE){
-    if(by == "brasil" | by == "brazil"){
-      mydata <- mydata %>%
-        summarise(newCases = sum(newCases),
-                  accumCases = sum(accumCases),
-                  newDeaths = sum(newDeaths),
-                  accumDeaths = sum(accumDeaths))
-    }else if(by == "estado" | by == "state"){
-      mydata <- mydata %>%
-        group_by(state) %>%
-        summarise(newCases = sum(newCases),
-                  accumCases = sum(accumCases),
-                  newDeaths = sum(newDeaths),
-                  accumDeaths = sum(accumDeaths))
-    }else{
-      mydata <- mydata %>%
-        group_by(region) %>%
-        summarise(newCases = sum(newCases),
-                  accumCases = sum(accumCases),
-                  newDeaths = sum(newDeaths),
-                  accumDeaths = sum(accumDeaths))
-    }
-  }else if(by == "regiao" | by == "region"){
-    mydata <- mydata %>%
-      group_by(date, region) %>%
-      summarise(newCases = sum(newCases),
-                accumCases = sum(accumCases),
-                newDeaths = sum(newDeaths),
-                accumDeaths = sum(accumDeaths))
-  }else{
-    message("It only make sense to aggregate data by states when date=TRUE!!!", "\n")
-    mydata <- data
-    return(data)
-  }
-  return(mydata)
-}
-
-
-
-aggregateW <- function(data, by=data$local, date = FALSE){
-  language <- attributes(data)$language
-  by <- match.arg(by)
-  mydata <- data
-  if(date==TRUE){
-    if(by == "brasil" | by == "brazil"){
-      mydata <- mydata %>%
-        summarise(newCases = sum(newCases),
-                  accumCases = sum(accumCases),
-                  newDeaths = sum(newDeaths),
-                  accumDeaths = sum(accumDeaths))
-    }else if(by == "estado" | by == "state"){
-      mydata <- mydata %>%
-        group_by(state) %>%
-        summarise(newCases = sum(newCases),
-                  accumCases = sum(accumCases),
-                  newDeaths = sum(newDeaths),
-                  accumDeaths = sum(accumDeaths))
-    }else{
-      mydata <- mydata %>%
-        group_by(region) %>%
-        summarise(newCases = sum(newCases),
-                  accumCases = sum(accumCases),
-                  newDeaths = sum(newDeaths),
-                  accumDeaths = sum(accumDeaths))
-    }
-  }else if(by == "regiao" | by == "region"){
-    mydata <- mydata %>%
-      group_by(date, region) %>%
-      summarise(newCases = sum(newCases),
-                accumCases = sum(accumCases),
-                newDeaths = sum(newDeaths),
-                accumDeaths = sum(accumDeaths))
-  }else{
-    message("It only make sense to aggregate data by states when date=TRUE!!!", "\n")
-    mydata <- data
-    return(data)
-  }
-  return(mydata)
-}
-
-
-dataBackup <- function(brasil, world){
-  wd <- system.file(package="readCovid19")
-  setwd(wd)
-  brasil_backup <- brasil
-  world_backup  <- world
-  setattr(brasil_backup, "date", today())
-  setattr(world_backup, "date", today())
-  usethis::use_data(brasil_backup, overwrite = TRUE)
-  usethis::use_data(world_backup, overwrite = TRUE)
-  return()
-}
-
-dataBackup(brasil, world)

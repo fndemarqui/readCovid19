@@ -10,6 +10,7 @@ Encoding: UTF-8
 Depends: 
   tidyverse,
   lubridate,
-  data.table
+  data.table,
+  httr
 LazyData: true
 RoxygenNote: 7.1.0
