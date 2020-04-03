@@ -21,7 +21,7 @@ downloadBR <- function(language=c("pt", "en")){
   url <- paste0(url, name, ".csv")
   brasil <- as_tibble(fread(url))
   brasil <- mutate(brasil, data = dmy(data))
-  brasil <- rename(brasil, obitosAcumulados = obitosAcumulado)
+  brasil <- rename(brasil, obitosAcumulados = obitosAcumulados)
   if(language=="en"){
     brasil <- rename(brasil,
                      region  =  regiao,
