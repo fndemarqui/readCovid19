@@ -11,6 +11,7 @@ Depends:
   tidyverse,
   lubridate,
   data.table,
-  httr
+  httr,
+  jsonlite
 LazyData: true
 RoxygenNote: 7.1.0
