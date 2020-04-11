@@ -1,24 +1,3 @@
-#' Function to seach for the most recent available data date
-#' @aliases avdate
-#' @export
-#' @param url desired url for searching the data set
-#' @param lagdays number of retrospective days to search for
-#' @return the most recent available data date.
-#' @description The function searchs and identifies, among all available data sets hosted at a given repository, the up-to-date data set.
-#' @note This function has been adapted from the code provided by Pedro Seiti Fujita.
-#'
-
-available_date <- function(url, lagdays){
-  Files <- function(date){paste0(url, date, '.csv')}
-  dates <- format(seq(as.Date(Sys.time())-lagdays, as.Date(Sys.time()), by='days'), "%Y%m%d")
-  status <- c()
-  for (i in 1:length(dates)) {
-    status[i] <- GET(Files(dates[i]))[2]$status_cod
-  }
-  return(dates[which.max(dates[status==200])])
-}
-
-
 #' Function to download data (at Brazilian level) from the official Brazilian's repository
 #' @aliases downloadBR
 #' @export
@@ -34,25 +13,32 @@ available_date <- function(url, lagdays){
 #' }
 #'
 
-downloadBR <- function(language=c("pt", "en"), lagdays=3){
+downloadBR <- function(language=c("pt", "en")){
   language <- match.arg(language)
   message("Downloading COVID-19 data from official Brazilian repository: https://covid.saude.gov.br/")
-  url <- "https://covid.saude.gov.br/assets/files/COVID19_"
-  ad <- available_date(url=url, lag=3)
-  url <- paste0(url, ad, ".csv")
+  cdnResponse <- httr::GET("https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalGeral", add_headers("X-Parse-Application-Id" = "unAFkcaNDeXajurGB7LChj8SgQYS2ptm"), accept_json())
+  results <- fromJSON(content(cdnResponse, "text", encoding="UTF-8"))$results
+  url <- results$arquivo$url
   brasil <- as_tibble(fread(url))
-  brasil <- mutate(brasil, data = dmy(data))
-  brasil <- rename(brasil, obitosAcumulados = obitosAcumulados)
+  brasil <- mutate(brasil, date = dmy(date))
   if(language=="en"){
     brasil <- rename(brasil,
-                     region  =  regiao,
-                     state = estado,
-                     date = data,
-                     newCases = casosNovos,
-                     accumCases = casosAcumulados,
-                     newDeaths = obitosNovos,
-                     accumDeaths = obitosAcumulados)
+                     state = sigla,
+                     newCases = cases_inc,
+                     accumCases = cases,
+                     newDeaths = deaths_inc,
+                     accumDeaths = deaths)
+  } else if(language=="pt") {
+    brasil <- rename(brasil,
+                     regiao = region,
+                     estado = sigla,
+                     data = date,
+                     casosNovos = cases_inc,
+                     casosAcumulados = cases,
+                     obitosNovos = deaths_inc,
+                     obitosAcumulados = deaths)
   }
+
   setattr(brasil, "language", language)
   return(brasil)
 }
