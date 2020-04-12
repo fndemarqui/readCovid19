@@ -8,10 +8,11 @@ URL: https://github.com/fndemarqui/readCovid19
 BugReports: https://github.com/fndemarqui/readCovid19/issues
 Encoding: UTF-8
 Depends: 
-  tidyverse,
-  lubridate,
-  data.table,
-  httr,
-  jsonlite
+    tidyverse,
+    lubridate,
+    data.table,
+    httr,
+    jsonlite,
+    R (>= 2.10)
 LazyData: true
 RoxygenNote: 7.1.0

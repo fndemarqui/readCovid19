@@ -1,18 +1,4 @@
-#' Function to download data (at Brazilian level) from the official Brazilian's repository
-#' @aliases downloadBR
-#' @export
-#' @param language language; currently only portuguese and english available
-#' @param lagdays number of retrospective days to search for
-#' @return tibble/data.frame with the downloaded data
-#'
-#' @examples
-#' \dontrun{
-#' library(readCovid19)
-#' brasil <- downloadBR()
-#' brasil
-#' }
-#'
-
+# Function to download data (at Brazilian level) from the official Brazilian's repository
 downloadBR <- function(language=c("pt", "en")){
   language <- match.arg(language)
   message("Downloading COVID-19 data from official Brazilian repository: https://covid.saude.gov.br/")
@@ -37,23 +23,7 @@ downloadBR <- function(language=c("pt", "en")){
 }
 
 
-#' Function to download data (at world level) from the Johns Hopkins University's repository
-#' @aliases downloadWorld
-#' @export
-#' @param language language; currently only portuguese and english available.
-#' @return tibble/data.frame with the downloaded data.
-#'
-#' @examples
-#' \dontrun{
-#' library(readCovid19)
-#' world <- downloadWorld()
-#' world
-#'
-#' # selecting data from Italy:
-#' italy <- filter(world, local=="Italy")
-#' }
-#'
-
+# Function to download data (at world level) from the Johns Hopkins University's repository
 downloadWorld <- function(language=c("en", "pt")){
   language <- match.arg(language)
   message("Downloading COVID-19 data from the Johns Hopkins University's repository")
@@ -128,9 +98,30 @@ downloadWorld <- function(language=c("en", "pt")){
 }
 
 
-brasil <- downloadBR()
-world <- downloadWorld()
-usethis::use_data(brasil, overwrite = TRUE)
-usethis::use_data(world, overwrite = TRUE)
+#' Function to download COVID-19 data from web repositories
+#' @aliases downloadCovid
+#' @export
+#' @param url data repository's url
+#' @param language language; currently only portuguese and english available
+#' @return tibble/data.frame containing the downloaded data
+#' @description This function downloads the pandemic COVID-19 data from two repositories: the the official Brazilian's repository mantained by the Brazilian Government (https://covid.saude.gov.br), which contains only data of the pandemia in Brazil at states and region levels, and the data from the Johns Hopkins University's repository (https://github.com/CSSEGISandData/COVID-19), which has been widely used all over the world as a reliable source of data information on the COVID-19 pandemia at a global level (countries and territories). For more details, please see our package's vignette.
+#'
+#' @examples
+#' \dontrun{
+#' library(readCovid19)
+#' brazil <- downloadCovid19(language="pt", url="brgov")
+#' brazil
+#'
+#' world <- downloadCovid19(language="pt", url="jhu")
+#' world
+#' }
+#'
+downloadCovid19 <- function(url=c("brgov", "jhu"), language=c("en", "pt")){
+  url <- match.arg(url)
+  language <- match.arg(language)
+  mydata <- switch(url,
+                   "brgov" = downloadBR(language),
+                   "jhu" = downloadWorld(language))
+}
 
 
