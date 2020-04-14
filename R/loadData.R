@@ -1,3 +1,15 @@
+# Function to compute the mortality rate:
+funMortalityRate <- function(accumCases, accumDeaths){
+  n <- length(accumCases)
+  rate <- rep(0, n)
+  for(i in 1:n){
+    if(accumCases[i]>0){
+      rate[i] <- accumDeaths[i]/accumCases[i]
+    }
+  }
+  return(rate)
+}
+
 # Function to download data (at Brazilian level) from the official Brazilian's repository
 downloadBR <- function(language=c("pt", "en")){
   language <- match.arg(language)
@@ -6,7 +18,9 @@ downloadBR <- function(language=c("pt", "en")){
   results <- fromJSON(content(cdnResponse, "text", encoding="UTF-8"))$results
   url <- results$arquivo$url
   brasil <- as_tibble(fread(url))
-  brasil <- mutate(brasil, data = dmy(data))
+  brasil <- mutate(brasil,
+                   data = dmy(data),
+                   mortalidade = funMortalityRate(casosAcumulados, obitosAcumulados))
   if(language=="en"){
     brasil <- rename(brasil,
                      region = regiao,
@@ -15,7 +29,8 @@ downloadBR <- function(language=c("pt", "en")){
                      newCases = casosNovos,
                      accumCases = casosAcumulados,
                      newDeaths = obitosNovos,
-                     accumDeaths = obitosAcumulados)
+                     accumDeaths = obitosAcumulados,
+                     mortality = mortalidade)
   }
 
   setattr(brasil, "language", language)
@@ -71,10 +86,12 @@ downloadWorld <- function(language=c("en", "pt")){
   world <-full_join(world, recovered, by=c("local", "date"))
 
   world <- world %>%
-    rename(accumCases = confirmed,
-           accumDeaths = deaths,
-           accumRecovered = recovered) %>%
-    group_by(local) %>%
+    rename(
+      countries_territories =  local,
+      accumCases = confirmed,
+      accumDeaths = deaths,
+      accumRecovered = recovered) %>%
+    group_by(countries_territories) %>%
     mutate(newCases = diff(c(0, accumCases)),
            newDeaths = diff(c(0, accumDeaths)),
            newRecovered = diff(c(0, accumRecovered)))
@@ -83,18 +100,20 @@ downloadWorld <- function(language=c("en", "pt")){
 
   if(language=="pt"){
     world <- rename(world,
-           data = date,
-           novosCasos = newCases,
-           novosObitos = newDeaths,
-           novosRecuperados  = newRecovered,
-           casosAcumulados = accumCases,
-           mortesAcumuladas = accumDeaths,
-           recuperadosAcumulados = accumRecovered)
+                    paises_territorios = countries_territories,
+                    data = date,
+                    casosNovos = newCases,
+                    obitosNovos = newDeaths,
+                    novosRecuperados  = newRecovered,
+                    casosAcumulados = accumCases,
+                    obitosAcumulados = accumDeaths,
+                    recuperadosAcumulados = accumRecovered)
 
   }
   setattr(world, "language", language)
   class(world) <-  class(world)[-1]
   return(world)
+
 }
 
 
