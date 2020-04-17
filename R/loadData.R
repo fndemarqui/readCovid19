@@ -22,15 +22,22 @@ downloadBR <- function(language=c("pt", "en")){
                    data = as.Date(data),
                    mortalidade = funMortalityRate(casosAcumulados, obitosAcumulados))
   if(language=="en"){
-    brasil <- rename(brasil,
-                     region = regiao,
-                     state = estado,
-                     date = data,
-                     newCases = casosNovos,
-                     accumCases = casosAcumulados,
-                     newDeaths = obitosNovos,
-                     accumDeaths = obitosAcumulados,
-                     mortality = mortalidade)
+    brasil <- brasil %>%
+      rename(
+         region = regiao,
+         state = estado,
+         date = data,
+         newCases = casosNovos,
+         accumCases = casosAcumulados,
+         newDeaths = obitosNovos,
+         accumDeaths = obitosAcumulados,
+         mortality = mortalidade) %>%
+      mutate(region = recode(region,
+                             Norte = "North",
+                             Nordeste = "Northeast",
+                             Sudeste = "Southeast",
+                             Sul = "South",
+                             'Centro-Oeste' = "Midwest"))
   }
 
   setattr(brasil, "language", language)
