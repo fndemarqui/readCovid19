@@ -10,11 +10,11 @@ Authors@R:
       person(given = "Cristiano", 
       family = "Santos", 
       email = "ccsgaus@ufmg.br", 
-      role = "aut"),
+      role = "ctb"),
       person(given = "Matheus", 
       family = "Costa", 
       email = "matheus_belo@id.uff.br", 
-      role = "aut"))
+      role = "ctb"))
 Description: R package to import CODID-19 pandemia data into R. The world level data is downloaded from the Johns Hopkins University's repository. Brazilian data is currently available on states level, and are downloaded from the official Brazilian's repository at https://covid.saude.gov.br/.
 URL: https://github.com/fndemarqui/readCovid19
 BugReports: https://github.com/fndemarqui/readCovid19/issues
