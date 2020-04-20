@@ -19,11 +19,7 @@ downloadBR <- function(language=c("pt", "en")){
   url <- results$arquivo$url
   brasil <- as_tibble(fread(url))
   brasil <- mutate(brasil,
-<<<<<<< HEAD
                    data = dmy(data),
-=======
-                   data = dmy(as.Date(data)),
->>>>>>> 7ec0a4f25ea95cd8d7e76b5fc927e1af53dc1a24
                    mortalidade = funMortalityRate(casosAcumulados, obitosAcumulados))
   if(language=="en"){
     brasil <- brasil %>%
