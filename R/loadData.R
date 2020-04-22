@@ -18,8 +18,12 @@ downloadBR <- function(language=c("pt", "en")){
   results <- fromJSON(content(cdnResponse, "text", encoding="UTF-8"))$results
   url <- results$arquivo$url
   brasil <- as_tibble(fread(url))
+  if(brasil$data[1] == "30/01/2020"){
+    brasil$data <- dmy(brasil$data)
+  }else{
+    brasil$data <- ymd(brasil$data)
+  }
   brasil <- mutate(brasil,
-                   data = parse_date(data),
                    mortalidade = funMortalityRate(casosAcumulados, obitosAcumulados))
   if(language=="en"){
     brasil <- brasil %>%
